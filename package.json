@@ -10,9 +10,10 @@
     "test:api":    "node creatomate-upload.js"
   },
   "dependencies": {
-    "express":       "^4.18.2",
-    "puppeteer":     "^22.0.0",
-    "ffmpeg-static": "^5.2.0"
+    "express":            "^4.18.2",
+    "puppeteer-core":     "^22.0.0",
+    "@sparticuz/chromium":"^123.0.1",
+    "ffmpeg-static":      "^5.2.0"
   },
   "engines": {
     "node": "20.x"

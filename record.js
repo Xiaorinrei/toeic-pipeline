@@ -11,7 +11,8 @@
  *   const mp4Path = await recordVideo(questionData, outputFileName);
  */
 
-const puppeteer  = require('puppeteer');
+const puppeteer  = require('puppeteer-core');
+const chromium   = require('@sparticuz/chromium');
 const { execSync, exec } = require('child_process');
 const path  = require('path');
 const fs    = require('fs');
@@ -38,19 +39,18 @@ async function recordVideo(data, filename = 'video_' + Date.now()) {
   const fileUrl = `file://${TEMPLATE_PATH}?data=${encodedData}&autoplay=1`;
 
   console.log(`  📹 Puppeteer起動中...`);
+  const executablePath = await chromium.executablePath();
   const browser = await puppeteer.launch({
-    headless: 'new',
     args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
+      ...chromium.args,
       '--disable-web-security',
       '--allow-file-access-from-files',
       '--window-size=1080,1920',
       '--force-device-scale-factor=1',
     ],
     defaultViewport: { width: 1080, height: 1920 },
+    executablePath,
+    headless: chromium.headless,
   });
 
   const page = await browser.newPage();
