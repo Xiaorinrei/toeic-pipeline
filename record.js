@@ -15,6 +15,7 @@ const puppeteer  = require('puppeteer');
 const { execSync, exec } = require('child_process');
 const path  = require('path');
 const fs    = require('fs');
+const ffmpegPath = require('ffmpeg-static');
 
 const TEMPLATE_PATH = path.join(__dirname, 'video-template-ready.html');
 const OUTPUT_DIR    = path.join(__dirname, 'output');
@@ -96,7 +97,7 @@ async function convertToMp4(webmPath, mp4Path) {
 
   return new Promise((resolve, reject) => {
     const cmd = [
-      'ffmpeg -y',
+      `"${ffmpegPath}" -y`,
       `-i "${webmPath}"`,
       '-c:v libx264',
       '-preset fast',
