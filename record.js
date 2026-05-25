@@ -60,7 +60,7 @@ async function recordVideo(data, filename = 'video_' + Date.now()) {
   await page.goto(fileUrl, { waitUntil: 'networkidle0', timeout: 30000 });
 
   // フォント読み込み待ち
-  await page.waitForTimeout(800);
+  await new Promise(resolve => setTimeout(resolve, 800));
 
   console.log(`  ⏺  録画開始（32秒）...`);
 
