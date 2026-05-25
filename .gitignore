@@ -1,0 +1,7 @@
+node_modules/
+output/
+video-template-ready.html
+.env
+*.webm
+*.mp4
+.DS_Store

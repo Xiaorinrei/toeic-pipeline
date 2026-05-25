@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: toeic990-pipeline
+    runtime: node
+    region: oregon
+    branch: main
+    buildCommand: "apt-get update && apt-get install -y ffmpeg && npm install && node setup-template.js"
+    startCommand: "node server.js"
+    envVars:
+      - key: CLAUDE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CREATOMATE_API_KEY
+        sync: false
+      - key: UPLOAD_POST_API_KEY
+        sync: false
+      - key: AIRTABLE_API_KEY
+        sync: false
+      - key: AIRTABLE_BASE_ID
+        sync: false
+      - key: WEBHOOK_SECRET
+        value: toeic990secret
+      - key: SERVER_URL
+        sync: false

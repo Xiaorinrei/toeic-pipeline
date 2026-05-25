@@ -1,0 +1,19 @@
+{
+  "name": "toeic990-video-pipeline",
+  "version": "1.0.0",
+  "description": "biz-toeic990.com - HTML録画 → Creatomate → SNS自動投稿パイプライン",
+  "main": "server.js",
+  "scripts": {
+    "start":       "node server.js",
+    "build":       "npm install && node setup-template.js",
+    "test:record": "node record.js",
+    "test:api":    "node creatomate-upload.js"
+  },
+  "dependencies": {
+    "express":    "^4.18.2",
+    "puppeteer":  "^22.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
