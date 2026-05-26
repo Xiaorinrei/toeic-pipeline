@@ -325,7 +325,7 @@ async function postToAllPlatforms(videoUrl, captions) {
       fd.append('video_url',   videoUrl);
       fd.append('title',       title);
       fd.append('description', caption || '');
-      const res  = await fetch('https://api.upload-post.com/api/upload_video', {
+      const res  = await fetch('https://api.upload-post.com/api/upload', {
         method: 'POST',
         headers: { 'Authorization': `Apikey ${ENV.uploadPostApiKey}` },
         body: fd,
