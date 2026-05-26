@@ -150,7 +150,9 @@ async function recordVideo(data, filename) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1080, height: 1920, deviceScaleFactor: 1 });
   await page.goto(fileUrl, { waitUntil: 'networkidle0', timeout: 30000 });
-  await new Promise(r => setTimeout(r, 800));
+  // Google Fontsのフォントファイルが完全に読み込まれるまで待つ
+  await page.evaluate(() => document.fonts.ready);
+  await new Promise(r => setTimeout(r, 2000));
 
   console.log('  ⏺  録画開始（32秒）...');
   const recorder = await page.screencast({ path: webmPath });
