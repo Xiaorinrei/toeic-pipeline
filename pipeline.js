@@ -97,7 +97,7 @@ async function generateScript({ sentence, answer, explanation }) {
 
 出力JSON（このキーを必ず含めること）:
 {
-  "hook_text": "冒頭フック（品詞の重要性を伝える一文）",
+  "hook_text": "「核心となる文法構文・語法（例: ask + 人 + to動詞）」\n構文を見分けよう!!",
   "part_label": "TOEIC PART 5 · 品詞問題",
   "subject_text": "文の主語（英語）",
   "subject_jp": "主語の日本語訳",

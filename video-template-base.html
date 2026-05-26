@@ -218,7 +218,7 @@ html, body {
 #s3.active .why-eyebrow, #s3.active .why-title { opacity: 1; }
 
 /* ════ SCENE 4: CTA ════ */
-#s4 { background: var(--brown); }
+#s4 { background: var(--cream); }
 #s4::before {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(ellipse at 70% 30%, rgba(176,122,90,0.18) 0%, transparent 60%);
@@ -239,11 +239,11 @@ html, body {
   opacity: 0; transition: opacity 0.4s ease 0.4s;
 }
 .cta-main {
-  font-size: 72px; font-weight: 900; color: var(--cream);
+  font-size: 72px; font-weight: 900; color: var(--brown);
   text-align: center; line-height: 1.4; margin-bottom: 36px;
   opacity: 0; transform: translateY(36px); transition: all 0.6s ease 0.6s;
 }
-.cta-main .acc { color: var(--terra2); }
+.cta-main .acc { color: var(--terra); }
 .cta-sub {
   font-family: 'Cormorant Garamond', serif; font-style: italic;
   font-size: 38px; color: var(--brown3); text-align: center;
@@ -460,7 +460,10 @@ function applyData(d) {
   const set = (id, val) => { if (val && document.getElementById(id)) document.getElementById(id).textContent = val; };
 
   set('part-label',      d.part_label);
-  set('hook-text',       d.hook_text);
+  // hook-text: \n を <br> に変換してHTMLで挿入
+  if (d.hook_text && document.getElementById('hook-text')) {
+    document.getElementById('hook-text').innerHTML = d.hook_text.replace(/\n/g, '<br>');
+  }
   set('q-sentence',      d.question);
   set('opt-a-text',      d.opt_a);
   set('opt-b-text',      d.opt_b);
