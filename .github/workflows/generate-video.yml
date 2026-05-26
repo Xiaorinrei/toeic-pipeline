@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Generate HTML template
+        run: node setup-template.js
+
       - name: Write payload
         env:
           PAYLOAD: ${{ toJson(github.event.client_payload) }}
