@@ -432,7 +432,8 @@ html, body {
   const dataParam = p.get('data');
   if (dataParam) {
     try {
-      const d = JSON.parse(atob(decodeURIComponent(dataParam)));
+      const bytes = Uint8Array.from(atob(decodeURIComponent(dataParam)), c => c.charCodeAt(0));
+      const d = JSON.parse(new TextDecoder('utf-8').decode(bytes));
       applyData(d);
       return;
     } catch(e) { console.warn('dataパラメータのパース失敗:', e); }
