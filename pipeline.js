@@ -219,32 +219,25 @@ async function addBgm(videoPath, outputPath) {
 }
 
 
-// ─── Step 4: Creatomate アセットアップロード ─────────────
+// ─── Step 4: transfer.sh に一時アップロード → 公開URL取得 ──
 async function uploadToCreatomate(mp4Path) {
-  console.log(`  📤 Creatomate: ファイルアップロード中...`);
+  console.log(`  📤 transfer.sh にアップロード中...`);
 
-  // Node.js 20 ネイティブ FormData + Blob でファイルをアップロード
+  const filename   = path.basename(mp4Path);
   const fileBuffer = fs.readFileSync(mp4Path);
-  const blob       = new Blob([fileBuffer], { type: 'video/mp4' });
-  const formData   = new FormData();
-  formData.append('file', blob, path.basename(mp4Path));
 
-  const res = await fetch('https://api.creatomate.com/v1/assets', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${ENV.creatomateApiKey}` },
-    body: formData,
+  const res = await fetch(`https://transfer.sh/${encodeURIComponent(filename)}`, {
+    method: 'PUT',
+    body: fileBuffer,
+    headers: {
+      'Content-Type': 'video/mp4',
+      'Max-Days': '3',
+    },
   });
 
-  if (!res.ok) throw new Error(`Creatomate assets error: ${await res.text()}`);
-
-  const asset = await res.json();
-  // レスポンス形式に応じてURLを取得
-  const url = (Array.isArray(asset) ? asset[0] : asset).url
-           || (Array.isArray(asset) ? asset[0] : asset).cdn_url
-           || (Array.isArray(asset) ? asset[0] : asset).download_url;
-  if (!url) throw new Error(`Creatomate assets: URLが見つかりません: ${JSON.stringify(asset)}`);
-
-  console.log(`  ✅ CDN URL: ${url}`);
+  if (!res.ok) throw new Error(`transfer.sh: ${res.status} ${await res.text()}`);
+  const url = (await res.text()).trim();
+  console.log(`  ✅ 公開URL: ${url}`);
   return url;
 }
 
