@@ -219,24 +219,26 @@ async function addBgm(videoPath, outputPath) {
 }
 
 
-// ─── Step 4: transfer.sh に一時アップロード → 公開URL取得 ──
+// ─── Step 4: 動画を公開URLにアップロード ────────────────
 async function uploadToCreatomate(mp4Path) {
-  console.log(`  📤 transfer.sh にアップロード中...`);
+  // catbox.moe（CI環境で実績あり、無料・匿名・72時間保持）
+  console.log(`  📤 catbox.moe にアップロード中...`);
 
-  const filename   = path.basename(mp4Path);
   const fileBuffer = fs.readFileSync(mp4Path);
+  const blob       = new Blob([fileBuffer], { type: 'video/mp4' });
+  const formData   = new FormData();
+  formData.append('reqtype',      'fileupload');
+  formData.append('time',         '72h');
+  formData.append('fileToUpload', blob, path.basename(mp4Path));
 
-  const res = await fetch(`https://transfer.sh/${encodeURIComponent(filename)}`, {
-    method: 'PUT',
-    body: fileBuffer,
-    headers: {
-      'Content-Type': 'video/mp4',
-      'Max-Days': '3',
-    },
+  const res = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
+    method: 'POST',
+    body: formData,
   });
 
-  if (!res.ok) throw new Error(`transfer.sh: ${res.status} ${await res.text()}`);
+  if (!res.ok) throw new Error(`catbox.moe: ${res.status} ${await res.text()}`);
   const url = (await res.text()).trim();
+  if (!url.startsWith('http')) throw new Error(`catbox.moe 予期しないレスポンス: ${url}`);
   console.log(`  ✅ 公開URL: ${url}`);
   return url;
 }
