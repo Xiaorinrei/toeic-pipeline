@@ -322,7 +322,7 @@ async function postToAllPlatforms(videoUrl, captions) {
       const fd = new FormData();
       fd.append('user',        'biz_toeic990');
       fd.append('platform[]',  key);
-      fd.append('video_url',   videoUrl);
+      fd.append('file_url',    videoUrl);
       fd.append('title',       title);
       fd.append('description', caption || '');
       const res  = await fetch('https://api.upload-post.com/api/upload', {
