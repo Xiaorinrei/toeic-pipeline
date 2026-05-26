@@ -14,6 +14,7 @@
 
 const puppeteer = require('puppeteer');
 const { exec }  = require('child_process');
+const http      = require('http');
 const path      = require('path');
 const fs        = require('fs');
 const crypto    = require('crypto');
@@ -129,8 +130,16 @@ async function recordVideo(data, filename) {
   const webmPath = path.join(OUTPUT_DIR, filename + '.webm');
   const mp4Path  = path.join(OUTPUT_DIR, filename + '.mp4');
 
+  // ローカルHTTPサーバーでHTMLを配信（Google Fontsが正しく読み込まれる）
+  const server = http.createServer((req, res) => {
+    const html = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(html);
+  });
+  await new Promise(resolve => server.listen(8765, '127.0.0.1', resolve));
+
   const encodedData = encodeURIComponent(Buffer.from(JSON.stringify(data)).toString('base64'));
-  const fileUrl     = `file://${TEMPLATE_PATH}?data=${encodedData}&autoplay=1`;
+  const pageUrl = `http://localhost:8765/?data=${encodedData}&autoplay=1`;
 
   console.log('  📹 Puppeteer起動中...');
   const browser = await puppeteer.launch({
@@ -140,8 +149,6 @@ async function recordVideo(data, filename) {
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--disable-web-security',
-      '--allow-file-access-from-files',
       '--window-size=1080,1920',
     ],
     defaultViewport: { width: 1080, height: 1920 },
@@ -149,10 +156,10 @@ async function recordVideo(data, filename) {
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1080, height: 1920, deviceScaleFactor: 1 });
-  await page.goto(fileUrl, { waitUntil: 'networkidle0', timeout: 30000 });
-  // Google Fontsのフォントファイルが完全に読み込まれるまで待つ
+  await page.goto(pageUrl, { waitUntil: 'networkidle0', timeout: 30000 });
+  // Google Fontsが完全に読み込まれるまで待つ
   await page.evaluate(() => document.fonts.ready);
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 1500));
 
   console.log('  ⏺  録画開始（32秒）...');
   const recorder = await page.screencast({ path: webmPath });
@@ -162,6 +169,7 @@ async function recordVideo(data, filename) {
 
   await recorder.stop();
   await browser.close();
+  server.close();
   console.log(`  ✅ 録画完了`);
 
   // WebM → MP4
