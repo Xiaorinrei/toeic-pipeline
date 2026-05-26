@@ -392,6 +392,17 @@ function buildVideoData(script, { sentence, options, answer }) {
 }
 
 function parseOptions(str) {
+  // オブジェクト形式 {"A": "...", "B": "...", ...} の場合
+  if (str && typeof str === 'object') {
+    return {
+      a: str.A || str.a || '',
+      b: str.B || str.b || '',
+      c: str.C || str.c || '',
+      d: str.D || str.d || '',
+    };
+  }
+  // 文字列形式の場合
+  if (!str || typeof str !== 'string') return { a: '', b: '', c: '', d: '' };
   const m = str.match(/A[.．](.+?)\s+B[.．](.+?)\s+C[.．](.+?)\s+D[.．](.+)/);
   if (m) return { a: m[1].trim(), b: m[2].trim(), c: m[3].trim(), d: m[4].trim() };
   const parts = str.split(/[,、\n]/).map(s => s.trim()).filter(Boolean);
