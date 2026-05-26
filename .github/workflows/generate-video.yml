@@ -18,8 +18,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install FFmpeg
-        run: sudo apt-get install -y ffmpeg
+      - name: Install FFmpeg and Japanese fonts
+        run: sudo apt-get install -y ffmpeg fonts-noto-cjk
 
       - name: Install dependencies
         run: npm install
