@@ -306,28 +306,32 @@ async function generateCaptions(hookText, sentence) {
 }
 
 
-// ─── Step 5B: Upload-Post 4媒体投稿 ─────────────────────
+// ─── Step 5B: Upload-Post 3媒体投稿（TikTokは有料プランのみ）─
 async function postToAllPlatforms(videoUrl, captions) {
   const results   = {};
   const platforms = [
-    { key: 'tiktok',    caption: captions.tiktok },
-    { key: 'instagram', caption: captions.instagram },
-    { key: 'youtube',   caption: `${captions.youtube_title}\n\n${captions.youtube_description}` },
-    { key: 'facebook',  caption: captions.facebook },
+    { key: 'instagram', caption: captions.instagram,
+      title: captions.instagram?.split('\n')[0]?.slice(0, 100) || 'TOEIC Part5解説' },
+    { key: 'youtube',   caption: captions.youtube_description,
+      title: captions.youtube_title || 'TOEIC Part5 構文解説' },
+    { key: 'facebook',  caption: captions.facebook,
+      title: captions.facebook?.split('\n')[0]?.slice(0, 100) || 'TOEIC Part5解説' },
   ];
-  for (const { key, caption } of platforms) {
+  for (const { key, caption, title } of platforms) {
     try {
       const fd = new FormData();
-      fd.append('platform[]', key);
-      fd.append('file_url', videoUrl);
-      fd.append('caption', caption);
-      const res  = await fetch('https://api.upload-post.com/api/v1/upload', {
+      fd.append('user',        'biz_toeic990');
+      fd.append('platform[]',  key);
+      fd.append('file_url',    videoUrl);
+      fd.append('title',       title);
+      fd.append('caption',     caption || '');
+      const res  = await fetch('https://api.upload-post.com/api/upload_video', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${ENV.uploadPostApiKey}` },
+        headers: { 'Authorization': `Apikey ${ENV.uploadPostApiKey}` },
         body: fd,
       });
       const json = await res.json().catch(() => ({}));
-      results[key] = res.ok ? 'success' : `failed: ${json.message || res.status}`;
+      results[key] = res.ok ? 'success' : `failed: ${JSON.stringify(json)}`;
       console.log(`     ${key}: ${results[key]}`);
     } catch (err) {
       results[key] = `error: ${err.message}`;
