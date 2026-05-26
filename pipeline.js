@@ -157,9 +157,18 @@ async function recordVideo(data, filename) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1080, height: 1920, deviceScaleFactor: 1 });
   await page.goto(pageUrl, { waitUntil: 'networkidle0', timeout: 30000 });
-  // Google Fontsが完全に読み込まれるまで待つ
-  await page.evaluate(() => document.fonts.ready);
-  await new Promise(r => setTimeout(r, 1500));
+  // 全フォントウェイトを強制的に事前ロード
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('400 16px "Noto Sans JP"'),
+      document.fonts.load('700 16px "Noto Sans JP"'),
+      document.fonts.load('900 16px "Noto Sans JP"'),
+      document.fonts.load('300 16px "Cormorant Garamond"'),
+      document.fonts.load('700 16px "Space Mono"'),
+    ]);
+  });
+  await new Promise(r => setTimeout(r, 3000));
 
   console.log('  ⏺  録画開始（32秒）...');
   const recorder = await page.screencast({ path: webmPath });
