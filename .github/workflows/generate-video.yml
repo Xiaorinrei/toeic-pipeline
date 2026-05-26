@@ -1,0 +1,40 @@
+name: Generate TOEIC Video
+
+on:
+  repository_dispatch:
+    types: [generate-video]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install FFmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Write payload
+        env:
+          PAYLOAD: ${{ toJson(github.event.client_payload) }}
+        run: echo "$PAYLOAD" > payload.json
+
+      - name: Run pipeline
+        run: node pipeline.js
+        env:
+          CLAUDE_API_KEY:       ${{ secrets.CLAUDE_API_KEY }}
+          CREATOMATE_API_KEY:   ${{ secrets.CREATOMATE_API_KEY }}
+          UPLOAD_POST_API_KEY:  ${{ secrets.UPLOAD_POST_API_KEY }}
+          AIRTABLE_API_KEY:     ${{ secrets.AIRTABLE_API_KEY }}
+          AIRTABLE_BASE_ID:     ${{ secrets.AIRTABLE_BASE_ID }}
+          SERVER_URL:           ${{ secrets.SERVER_URL }}
