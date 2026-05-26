@@ -60,9 +60,7 @@ async function main() {
 
   // Step 4: Creatomate → CDN
   console.log('\n[4/5] Creatomate → CDNアップロード');
-  const filename = path.basename(finalMp4);
-  const tempUrl  = `${ENV.serverUrl}/files/${filename}`;
-  const cdnUrl   = await uploadToCreatomate(finalMp4, tempUrl);
+  const cdnUrl = await uploadToCreatomate(finalMp4);
 
   // Step 5: Claude → キャプション生成 + Upload-Post → 投稿
   console.log('\n[5/5] Claude → キャプション + Upload-Post → 4媒体投稿');
@@ -221,48 +219,33 @@ async function addBgm(videoPath, outputPath) {
 }
 
 
-// ─── Step 4: Creatomate CDNアップロード ──────────────────
-async function uploadToCreatomate(mp4Path, tempUrl) {
-  console.log(`  📤 Creatomate送信中... (${tempUrl})`);
-  const res = await fetch('https://api.creatomate.com/v1/renders', {
+// ─── Step 4: Creatomate アセットアップロード ─────────────
+async function uploadToCreatomate(mp4Path) {
+  console.log(`  📤 Creatomate: ファイルアップロード中...`);
+
+  // Node.js 20 ネイティブ FormData + Blob でファイルをアップロード
+  const fileBuffer = fs.readFileSync(mp4Path);
+  const blob       = new Blob([fileBuffer], { type: 'video/mp4' });
+  const formData   = new FormData();
+  formData.append('file', blob, path.basename(mp4Path));
+
+  const res = await fetch('https://api.creatomate.com/v1/assets', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${ENV.creatomateApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      output_format: 'mp4',
-      width: 1080, height: 1920, frame_rate: 30, duration: 32,
-      elements: [{
-        type: 'video', source: tempUrl,
-        width: '100%', height: '100%',
-        x: '50%', y: '50%', x_anchor: '50%', y_anchor: '50%',
-        fit: 'cover', duration: 32,
-      }],
-    }),
+    headers: { 'Authorization': `Bearer ${ENV.creatomateApiKey}` },
+    body: formData,
   });
 
-  if (!res.ok) throw new Error(`Creatomate error: ${await res.text()}`);
-  const renders  = await res.json();
-  const renderId = (Array.isArray(renders) ? renders[0] : renders).id;
-  console.log(`  Render ID: ${renderId}`);
-  return await pollCreatomate(renderId);
-}
+  if (!res.ok) throw new Error(`Creatomate assets error: ${await res.text()}`);
 
-async function pollCreatomate(renderId) {
-  const start = Date.now();
-  while (Date.now() - start < 300000) {
-    await new Promise(r => setTimeout(r, 5000));
-    const res    = await fetch(`https://api.creatomate.com/v1/renders/${renderId}`, {
-      headers: { 'Authorization': `Bearer ${ENV.creatomateApiKey}` },
-    });
-    const render = await res.json();
-    const sec    = Math.round((Date.now() - start) / 1000);
-    process.stdout.write(`\r  状態: ${render.status.padEnd(12)} (${sec}秒)`);
-    if (render.status === 'succeeded') { process.stdout.write('\n'); return render.url; }
-    if (render.status === 'failed') throw new Error('Creatomateレンダリング失敗');
-  }
-  throw new Error('Creatomateタイムアウト');
+  const asset = await res.json();
+  // レスポンス形式に応じてURLを取得
+  const url = (Array.isArray(asset) ? asset[0] : asset).url
+           || (Array.isArray(asset) ? asset[0] : asset).cdn_url
+           || (Array.isArray(asset) ? asset[0] : asset).download_url;
+  if (!url) throw new Error(`Creatomate assets: URLが見つかりません: ${JSON.stringify(asset)}`);
+
+  console.log(`  ✅ CDN URL: ${url}`);
+  return url;
 }
 
 
