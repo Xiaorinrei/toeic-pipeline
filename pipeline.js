@@ -322,19 +322,22 @@ async function postToAllPlatforms(videoUrl, captions) {
       const fd = new FormData();
       fd.append('user',        'biz_toeic990');
       fd.append('platform[]',  key);
-      fd.append('file_url',    videoUrl);
+      fd.append('video_url',   videoUrl);
       fd.append('title',       title);
-      fd.append('caption',     caption || '');
+      fd.append('description', caption || '');
       const res  = await fetch('https://api.upload-post.com/api/upload_video', {
         method: 'POST',
         headers: { 'Authorization': `Apikey ${ENV.uploadPostApiKey}` },
         body: fd,
       });
-      const json = await res.json().catch(() => ({}));
-      results[key] = res.ok ? 'success' : `failed: ${JSON.stringify(json)}`;
-      console.log(`     ${key}: ${results[key]}`);
+      const rawText = await res.text();
+      let json = {};
+      try { json = JSON.parse(rawText); } catch(_) {}
+      console.log(`     ${key}: HTTP ${res.status} → ${rawText.slice(0, 200)}`);
+      results[key] = res.ok ? 'success' : `failed(${res.status}): ${rawText.slice(0, 100)}`;
     } catch (err) {
       results[key] = `error: ${err.message}`;
+      console.log(`     ${key}: ${err.message}`);
     }
   }
   return results;
