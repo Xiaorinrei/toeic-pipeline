@@ -1,14 +1,14 @@
 import os
 import requests
-from google import genai
+import google.generativeai as genai
 
 # GitHub Secretsから環境変数を取得
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 NOTION_API_KEY = os.environ.get("NOTION_API_KEY")
 NOTION_DATABASE_ID = os.environ.get("NOTION_DATABASE_ID")
 
-# Geminiクライアントの初期化
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Geminiの初期設定
+genai.configure(api_key=GEMINI_API_KEY)
 
 def generate_article():
     prompt = """
@@ -22,10 +22,9 @@ def generate_article():
         "tags": "ハッシュタグ（例: #英語学習 #TOEIC）"
     }
     """
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-    )
+    # 安定稼働する定番モデルを指定
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content(prompt)
     return response.text
 
 def save_to_notion(title, body, tags):
@@ -56,21 +55,17 @@ if __name__ == "__main__":
     import json
     import re
     
-    # 記事を生成
     print("Geminiで記事を生成中...")
     raw_text = generate_article()
     
-    # Markdownのコードブロック表記(```json)を取り除く処理
     cleaned_text = re.sub(r'```json\n|\n```', '', raw_text).strip()
     
     try:
-        # JSONとして読み込む
         article_data = json.loads(cleaned_text)
         title = article_data.get("title", "無題のnote記事")
         body = article_data.get("body", "本文が生成されませんでした。")
         tags = article_data.get("tags", "")
         
-        # Notionへ保存
         print("Notionへ保存中...")
         save_to_notion(title, body, tags)
         
