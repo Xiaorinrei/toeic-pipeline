@@ -22,8 +22,8 @@ def generate_article():
         "tags": "ハッシュタグ（例: #英語学習 #TOEIC）"
     }
     """
-    # 安定稼働する定番モデルを指定
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # 確実に存在する汎用モデルを指定
+    model = genai.GenerativeModel('gemini-pro')
     response = model.generate_content(prompt)
     return response.text
 
