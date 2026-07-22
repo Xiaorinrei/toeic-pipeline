@@ -1,14 +1,14 @@
 import os
 import requests
-import google.generativeai as genai
+from google import genai
 
 # GitHub Secretsから環境変数を取得
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 NOTION_API_KEY = os.environ.get("NOTION_API_KEY")
 NOTION_DATABASE_ID = os.environ.get("NOTION_DATABASE_ID")
 
-# Geminiの初期設定
-genai.configure(api_key=GEMINI_API_KEY)
+# 最新のGeminiクライアント初期化
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_article():
     prompt = """
@@ -22,9 +22,10 @@ def generate_article():
         "tags": "ハッシュタグ（例: #英語学習 #TOEIC）"
     }
     """
-    # 確実に存在する汎用モデルを指定
-    model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
+    )
     return response.text
 
 def save_to_notion(title, body, tags):
