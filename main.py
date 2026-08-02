@@ -330,6 +330,26 @@ def upload_image_to_notion(image_path):
 # ------------------------------------------------------------
 # 5. Notionページ作成
 # ------------------------------------------------------------
+def _notion_post_with_retry(url, headers, data, max_attempts=5):
+    """一時的な混雑(429/5xx/529)は待って自動リトライする"""
+    transient = {429, 500, 502, 503, 504, 529}
+    last = None
+    for attempt in range(max_attempts):
+        resp = requests.post(url, headers=headers, json=data)
+        last = resp
+        if resp.status_code == 200:
+            return resp
+        if resp.status_code in transient:
+            wait = 5 * (attempt + 1)
+            print(f"⚠️ Notionが混雑({resp.status_code})。{wait}秒待って再試行します"
+                  f"({attempt + 1}/{max_attempts})...")
+            time.sleep(wait)
+            continue
+        # それ以外(400番台など)はリトライしても無駄なので即返す
+        return resp
+    return last
+
+
 def save_to_notion(title, body, tags, thumb_upload_id=None):
     url = "https://api.notion.com/v1/pages"
     children = []
@@ -366,11 +386,11 @@ def save_to_notion(title, body, tags, thumb_upload_id=None):
 
     # サムネを含む場合は新バージョン、失敗時は画像なしで確実に保存
     version = NOTION_VERSION_UPLOAD if thumb_upload_id else NOTION_VERSION_STABLE
-    resp = requests.post(url, headers={
+    resp = _notion_post_with_retry(url, {
         "Authorization": f"Bearer {NOTION_API_KEY}",
         "Content-Type": "application/json",
         "Notion-Version": version,
-    }, json=data)
+    }, data)
 
     if resp.status_code == 200:
         print("✅ Notionへの保存が成功しました!")
@@ -378,7 +398,7 @@ def save_to_notion(title, body, tags, thumb_upload_id=None):
 
     print(f"⚠️ 保存に失敗({resp.status_code})。画像なしで再試行します...")
     print(resp.text)
-    # 画像ブロックを外して再試行
+    # 画像ブロックを外して再試行(混雑時もリトライ)
     data["children"] = markdown_to_blocks(body)
     if tags:
         data["children"].append({
@@ -386,11 +406,11 @@ def save_to_notion(title, body, tags, thumb_upload_id=None):
             "type": "paragraph",
             "paragraph": {"rich_text": _rich_text(tags)},
         })
-    retry = requests.post(url, headers={
+    retry = _notion_post_with_retry(url, {
         "Authorization": f"Bearer {NOTION_API_KEY}",
         "Content-Type": "application/json",
         "Notion-Version": NOTION_VERSION_STABLE,
-    }, json=data)
+    }, data)
     if retry.status_code == 200:
         print("✅ Notionへの保存が成功しました(画像なし)!")
     else:
