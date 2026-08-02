@@ -12,8 +12,8 @@ NOTION_DATABASE_ID = os.environ.get("NOTION_DATABASE_ID")
 
 # 使用モデル(無料枠あり)。詰まった場合は自動でフォールバックする
 MODELS = [
-    os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
-    "gemini-2.5-flash-lite",  # 無料枠が最も多い予備モデル
+    os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"),
+    "gemini-3.5-flash-lite",  # 高速・低コストの予備モデル
 ]
 
 # 最新のGeminiクライアント初期化
